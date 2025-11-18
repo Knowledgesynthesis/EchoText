@@ -929,6 +929,13 @@
             }
 
             state.availableVoices = voices;
+
+            // Debug: Log available voices to console
+            console.log(`Loaded ${voices.length} voices:`);
+            voices.forEach(voice => {
+                console.log(`- ${voice.name} (${voice.lang}) [${voice.localService ? 'Local' : 'Remote'}]`);
+            });
+
             populateVoiceSelector(voices);
         }
 
@@ -1497,12 +1504,16 @@
             updateButtonStates();
             updateStatus('Ready to speak.', 'ready');
 
-            // If voices didn't load immediately, try again
-            setTimeout(() => {
-                if (state.availableVoices.length === 0) {
-                    loadVoices();
-                }
-            }, 100);
+            // If voices didn't load immediately, try again multiple times
+            // Chrome's Google voices can take a moment to load
+            const retryIntervals = [100, 300, 500, 1000];
+            retryIntervals.forEach(interval => {
+                setTimeout(() => {
+                    if (state.availableVoices.length === 0) {
+                        loadVoices();
+                    }
+                }, interval);
+            });
         }
 
         // Start the app when DOM is ready
