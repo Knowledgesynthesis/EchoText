@@ -1156,7 +1156,10 @@
             utterance.onstart = () => {
                 state.isPlaying = true;
                 state.isPaused = false;
-                state.isJumping = false; // Clear jumping flag
+                // Clear jumping flag after a brief delay to let old error handler finish
+                setTimeout(() => {
+                    state.isJumping = false;
+                }, 100);
                 updateStatus('Speaking...', 'speaking');
                 updateButtonStates();
             };
@@ -1261,7 +1264,10 @@
             utterance.onstart = () => {
                 state.isPlaying = true;
                 state.isPaused = false;
-                state.isJumping = false;
+                // Clear jumping flag after a brief delay to let any pending error handler finish
+                setTimeout(() => {
+                    state.isJumping = false;
+                }, 100);
                 updateStatus('Speaking...', 'speaking');
                 updateButtonStates();
             };
