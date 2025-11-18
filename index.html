@@ -875,7 +875,9 @@
             availableVoices: [],
             currentWordIndex: -1,
             words: [],
-            textContent: ''
+            textContent: '',
+            boundaryFallbackTimer: null,
+            useBoundaryFallback: false
         };
 
         /* ============================================
@@ -1090,6 +1092,9 @@
         }
 
         function clearReadingDisplay() {
+            // Stop any fallback timer
+            stopBoundaryFallback();
+
             // Remove highlight from current word
             if (state.currentWordIndex !== -1 && state.words[state.currentWordIndex]) {
                 state.words[state.currentWordIndex].element?.classList.remove('highlight');
@@ -1110,6 +1115,56 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function startBoundaryFallback(rate, startWordIndex = 0) {
+            // Clear any existing fallback timer
+            if (state.boundaryFallbackTimer) {
+                clearInterval(state.boundaryFallbackTimer);
+            }
+
+            // Calculate average time per word based on speech rate
+            // Typical speaking rate is about 150 words per minute at rate=1.0
+            // Adjust based on actual rate
+            const wordsPerMinute = 150 * rate;
+            const msPerWord = (60 * 1000) / wordsPerMinute;
+
+            let currentWordIdx = startWordIndex;
+
+            state.boundaryFallbackTimer = setInterval(() => {
+                if (!state.isPlaying || state.isPaused) {
+                    return;
+                }
+
+                if (currentWordIdx < state.words.length) {
+                    // Remove highlight from previous word
+                    if (state.currentWordIndex !== -1 && state.words[state.currentWordIndex]) {
+                        state.words[state.currentWordIndex].element?.classList.remove('highlight');
+                    }
+
+                    // Highlight current word
+                    if (state.words[currentWordIdx]) {
+                        const wordElement = state.words[currentWordIdx].element;
+                        wordElement?.classList.add('highlight');
+                        scrollToWord(wordElement);
+                        state.currentWordIndex = currentWordIdx;
+                    }
+
+                    currentWordIdx++;
+                } else {
+                    // Reached the end
+                    clearInterval(state.boundaryFallbackTimer);
+                    state.boundaryFallbackTimer = null;
+                }
+            }, msPerWord);
+        }
+
+        function stopBoundaryFallback() {
+            if (state.boundaryFallbackTimer) {
+                clearInterval(state.boundaryFallbackTimer);
+                state.boundaryFallbackTimer = null;
+            }
+            state.useBoundaryFallback = false;
         }
 
         function speakFromWord(wordIndex) {
@@ -1161,12 +1216,23 @@
                 state.isPaused = false;
                 updateStatus('Speaking...', 'speaking');
                 updateButtonStates();
+
+                // Start boundary fallback detection
+                // If no boundary events fire in 500ms, use fallback
+                state.useBoundaryFallback = false;
+                setTimeout(() => {
+                    if (state.isPlaying && !state.useBoundaryFallback) {
+                        console.log('onboundary events not detected, using fallback timing');
+                        startBoundaryFallback(utterance.rate, wordIndex);
+                    }
+                }, 500);
             };
 
             utterance.onend = () => {
                 // Only handle if this is still the current utterance
                 if (state.currentUtterance !== utterance) return;
 
+                stopBoundaryFallback();
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
@@ -1183,6 +1249,7 @@
                     return;
                 }
 
+                stopBoundaryFallback();
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
@@ -1215,6 +1282,8 @@
             // Note: charIndex in onboundary is relative to the new utterance starting position
             utterance.onboundary = (event) => {
                 if (event.name === 'word') {
+                    // Mark that boundary events are working
+                    state.useBoundaryFallback = true;
                     // Add the offset to get the absolute position in the original text
                     highlightWord(charPosition + event.charIndex);
                 }
@@ -1266,12 +1335,23 @@
                 state.isPaused = false;
                 updateStatus('Speaking...', 'speaking');
                 updateButtonStates();
+
+                // Start boundary fallback detection
+                // If no boundary events fire in 500ms, use fallback
+                state.useBoundaryFallback = false;
+                setTimeout(() => {
+                    if (state.isPlaying && !state.useBoundaryFallback) {
+                        console.log('onboundary events not detected, using fallback timing');
+                        startBoundaryFallback(utterance.rate);
+                    }
+                }, 500);
             };
 
             utterance.onend = () => {
                 // Only handle if this is still the current utterance
                 if (state.currentUtterance !== utterance) return;
 
+                stopBoundaryFallback();
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
@@ -1288,6 +1368,7 @@
                     return;
                 }
 
+                stopBoundaryFallback();
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
@@ -1320,6 +1401,8 @@
             utterance.onboundary = (event) => {
                 // event.charIndex gives us the character position in the text
                 if (event.name === 'word') {
+                    // Mark that boundary events are working
+                    state.useBoundaryFallback = true;
                     highlightWord(event.charIndex);
                 }
             };
@@ -1350,6 +1433,7 @@
 
         function stop() {
             speechSynthesis.cancel();
+            stopBoundaryFallback();
             state.isPlaying = false;
             state.isPaused = false;
             state.currentUtterance = null;
