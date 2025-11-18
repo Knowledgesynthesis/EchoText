@@ -875,8 +875,7 @@
             availableVoices: [],
             currentWordIndex: -1,
             words: [],
-            textContent: '',
-            isJumping: false
+            textContent: ''
         };
 
         /* ============================================
@@ -1097,7 +1096,6 @@
             state.currentWordIndex = -1;
             state.words = [];
             state.textContent = '';
-            state.isJumping = false;
             elements.readingDisplay.innerHTML = '';
         }
 
@@ -1129,20 +1127,18 @@
             // Get the text from this position onwards
             const textFromWord = state.textContent.substring(charPosition);
 
-            // Set flag to indicate we're jumping, not stopping
-            state.isJumping = true;
-
-            // Cancel current speech
-            speechSynthesis.cancel();
-
             // Remove highlight from current word
             if (state.currentWordIndex !== -1 && state.words[state.currentWordIndex]) {
                 state.words[state.currentWordIndex].element?.classList.remove('highlight');
             }
 
-            // Create new utterance from this position
+            // Create new utterance from this position BEFORE canceling
+            // This way, the old utterance's error handler will see it's no longer current
             const utterance = new SpeechSynthesisUtterance(textFromWord);
             state.currentUtterance = utterance;
+
+            // Cancel current speech (this will trigger old utterance's error, but it will be ignored)
+            speechSynthesis.cancel();
 
             // Apply selected voice
             if (state.selectedVoice) {
@@ -1156,19 +1152,17 @@
             utterance.onstart = () => {
                 state.isPlaying = true;
                 state.isPaused = false;
-                // Clear jumping flag after a brief delay to let old error handler finish
-                setTimeout(() => {
-                    state.isJumping = false;
-                }, 100);
                 updateStatus('Speaking...', 'speaking');
                 updateButtonStates();
             };
 
             utterance.onend = () => {
+                // Only handle if this is still the current utterance
+                if (state.currentUtterance !== utterance) return;
+
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
-                state.isJumping = false;
                 clearReadingDisplay();
                 updateStatus('Finished.', 'ready');
                 updateButtonStates();
@@ -1177,15 +1171,14 @@
             utterance.onerror = (event) => {
                 console.error('Speech synthesis error:', event);
 
-                // If we're jumping, ignore the cancel error from the previous utterance
-                if (state.isJumping && event.error === 'canceled') {
+                // Ignore errors from old utterances that are no longer current
+                if (state.currentUtterance !== utterance) {
                     return;
                 }
 
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
-                state.isJumping = false;
 
                 let errorMessage = 'An error occurred during speech synthesis.';
                 if (event.error === 'canceled') {
@@ -1264,19 +1257,17 @@
             utterance.onstart = () => {
                 state.isPlaying = true;
                 state.isPaused = false;
-                // Clear jumping flag after a brief delay to let any pending error handler finish
-                setTimeout(() => {
-                    state.isJumping = false;
-                }, 100);
                 updateStatus('Speaking...', 'speaking');
                 updateButtonStates();
             };
 
             utterance.onend = () => {
+                // Only handle if this is still the current utterance
+                if (state.currentUtterance !== utterance) return;
+
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
-                state.isJumping = false;
                 clearReadingDisplay();
                 updateStatus('Finished.', 'ready');
                 updateButtonStates();
@@ -1285,15 +1276,14 @@
             utterance.onerror = (event) => {
                 console.error('Speech synthesis error:', event);
 
-                // If we're jumping, ignore the cancel error from the previous utterance
-                if (state.isJumping && event.error === 'canceled') {
+                // Ignore errors from old utterances that are no longer current
+                if (state.currentUtterance !== utterance) {
                     return;
                 }
 
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
-                state.isJumping = false;
 
                 let errorMessage = 'An error occurred during speech synthesis.';
                 if (event.error === 'canceled') {
