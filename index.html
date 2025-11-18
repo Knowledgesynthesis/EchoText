@@ -718,6 +718,12 @@
             transition: all 0.15s ease-in-out;
             border-radius: 4px;
             padding: 2px 0;
+            cursor: pointer;
+        }
+
+        .reading-display .word:hover {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 2px 4px;
         }
 
         .reading-display .word.highlight {
@@ -730,6 +736,10 @@
         }
 
         @media (prefers-color-scheme: dark) {
+            .reading-display .word:hover {
+                background: rgba(102, 126, 234, 0.15);
+            }
+
             .reading-display .word.highlight {
                 background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%);
                 color: #9fa8ed;
@@ -983,9 +993,16 @@
             // Set the HTML and get references to word elements
             elements.readingDisplay.innerHTML = html;
 
-            // Store references to word elements
+            // Store references to word elements and add click handlers
             state.words.forEach(word => {
                 word.element = elements.readingDisplay.querySelector(`[data-word-index="${word.index}"]`);
+
+                // Add click handler to jump to this word
+                if (word.element) {
+                    word.element.addEventListener('click', () => {
+                        speakFromWord(word.index);
+                    });
+                }
             });
 
             // Show the reading display and hide textarea
@@ -1086,6 +1103,116 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function speakFromWord(wordIndex) {
+            // Only allow jumping if we're currently playing or paused
+            if (!state.isPlaying && !state.isPaused) {
+                return;
+            }
+
+            // Calculate the character position of the clicked word
+            let charPosition = 0;
+            for (let i = 0; i < wordIndex && i < state.words.length; i++) {
+                charPosition += state.words[i].text.length;
+
+                // Add the whitespace after this word
+                const currentPos = charPosition;
+                const nextSpaceMatch = state.textContent.substring(currentPos).match(/^\s+/);
+                if (nextSpaceMatch) {
+                    charPosition += nextSpaceMatch[0].length;
+                }
+            }
+
+            // Get the text from this position onwards
+            const textFromWord = state.textContent.substring(charPosition);
+
+            // Cancel current speech
+            speechSynthesis.cancel();
+
+            // Remove highlight from current word
+            if (state.currentWordIndex !== -1 && state.words[state.currentWordIndex]) {
+                state.words[state.currentWordIndex].element?.classList.remove('highlight');
+            }
+
+            // Create new utterance from this position
+            const utterance = new SpeechSynthesisUtterance(textFromWord);
+            state.currentUtterance = utterance;
+
+            // Apply selected voice
+            if (state.selectedVoice) {
+                utterance.voice = state.selectedVoice;
+            }
+
+            // Apply rate
+            utterance.rate = parseFloat(elements.rateSlider.value);
+
+            // Set up event handlers (same as speak function)
+            utterance.onstart = () => {
+                state.isPlaying = true;
+                state.isPaused = false;
+                updateStatus('Speaking...', 'speaking');
+                updateButtonStates();
+            };
+
+            utterance.onend = () => {
+                state.isPlaying = false;
+                state.isPaused = false;
+                state.currentUtterance = null;
+                clearReadingDisplay();
+                updateStatus('Finished.', 'ready');
+                updateButtonStates();
+            };
+
+            utterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event);
+                state.isPlaying = false;
+                state.isPaused = false;
+                state.currentUtterance = null;
+
+                let errorMessage = 'An error occurred during speech synthesis.';
+                if (event.error === 'canceled') {
+                    errorMessage = 'Speech was canceled.';
+                } else if (event.error === 'interrupted') {
+                    errorMessage = 'Speech was interrupted.';
+                }
+
+                clearReadingDisplay();
+                updateStatus(errorMessage, 'error');
+                updateButtonStates();
+            };
+
+            utterance.onpause = () => {
+                state.isPaused = true;
+                updateStatus('Paused.', 'paused');
+                updateButtonStates();
+            };
+
+            utterance.onresume = () => {
+                state.isPaused = false;
+                updateStatus('Speaking...', 'speaking');
+                updateButtonStates();
+            };
+
+            // Track word boundaries for highlighting
+            // Note: charIndex in onboundary is relative to the new utterance starting position
+            utterance.onboundary = (event) => {
+                if (event.name === 'word') {
+                    // Add the offset to get the absolute position in the original text
+                    highlightWord(charPosition + event.charIndex);
+                }
+            };
+
+            // Start speaking
+            try {
+                speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.error('Error calling speechSynthesis.speak():', error);
+                updateStatus('Failed to start speech synthesis.', 'error');
+                state.isPlaying = false;
+                state.currentUtterance = null;
+                updateButtonStates();
+            }
         }
 
         /* ============================================
