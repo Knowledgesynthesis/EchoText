@@ -114,15 +114,15 @@
            ============================================ */
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: var(--spacing-md);
+            padding: var(--spacing-sm);
         }
 
         header {
             text-align: center;
-            padding: var(--spacing-2xl) var(--spacing-md) var(--spacing-xl);
-            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-lg) var(--spacing-sm) var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
         }
 
         header h1 {
@@ -153,8 +153,8 @@
 
         .card {
             background: var(--bg-card);
-            border-radius: 1.5rem;
-            padding: var(--spacing-2xl);
+            border-radius: 1rem;
+            padding: var(--spacing-lg);
             box-shadow: var(--shadow-xl);
             border: 1px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
@@ -169,7 +169,7 @@
 
         footer {
             text-align: center;
-            padding: var(--spacing-xl) var(--spacing-md);
+            padding: var(--spacing-md) var(--spacing-sm);
             color: rgba(255, 255, 255, 0.75);
             font-size: 0.875rem;
         }
@@ -189,21 +189,21 @@
            FORM ELEMENTS
            ============================================ */
         .form-group {
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-sm);
         }
 
         label {
             display: block;
             font-weight: 600;
-            margin-bottom: var(--spacing-sm);
+            margin-bottom: var(--spacing-xs);
             color: var(--text-primary);
             font-size: 0.9375rem;
         }
 
         textarea {
             width: 100%;
-            min-height: 250px;
-            padding: var(--spacing-lg);
+            min-height: 350px;
+            padding: var(--spacing-md);
             border: 2px solid var(--border-color);
             border-radius: var(--radius-lg);
             font-family: inherit;
@@ -240,14 +240,14 @@
            CONTROLS SECTION
            ============================================ */
         .controls {
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-sm);
         }
 
         .control-row {
             display: flex;
             flex-wrap: wrap;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-md);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
         }
 
         .control-group {
@@ -257,11 +257,11 @@
 
         select {
             width: 100%;
-            padding: var(--spacing-md) var(--spacing-lg);
+            padding: var(--spacing-sm) var(--spacing-md);
             border: 2px solid var(--border-color);
             border-radius: var(--radius-lg);
             font-family: inherit;
-            font-size: 1rem;
+            font-size: 0.9375rem;
             font-weight: 500;
             color: var(--text-primary);
             background: var(--input-bg);
@@ -395,15 +395,15 @@
         .button-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: var(--spacing-md);
+            gap: var(--spacing-sm);
         }
 
         button {
-            padding: var(--spacing-md) var(--spacing-xl);
+            padding: var(--spacing-sm) var(--spacing-md);
             border: none;
             border-radius: var(--radius-lg);
             font-family: inherit;
-            font-size: 1.0625rem;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition-fast);
@@ -486,14 +486,14 @@
            STATUS AREA
            ============================================ */
         .status-area {
-            padding: var(--spacing-lg);
+            padding: var(--spacing-sm);
             border-radius: var(--radius-lg);
             background: var(--input-bg);
             border: 2px solid var(--border-color);
             text-align: center;
-            font-size: 1rem;
+            font-size: 0.9375rem;
             font-weight: 600;
-            min-height: 3.5rem;
+            min-height: 2.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -552,11 +552,16 @@
            ============================================ */
         @media (max-width: 768px) {
             .container {
-                padding: var(--spacing-sm);
+                padding: var(--spacing-xs);
             }
 
             .card {
-                padding: var(--spacing-lg);
+                padding: var(--spacing-md);
+                border-radius: var(--radius-md);
+            }
+
+            header {
+                padding: var(--spacing-md) var(--spacing-xs) var(--spacing-xs);
             }
 
             .control-row {
@@ -581,6 +586,11 @@
 
             header p {
                 font-size: 1rem;
+            }
+
+            textarea,
+            .reading-display {
+                min-height: 300px;
             }
         }
 
@@ -619,6 +629,60 @@
 
         .status-area.paused::before {
             content: '⏸️ ';
+        }
+
+        /* ============================================
+           READING DISPLAY WITH HIGHLIGHTING
+           ============================================ */
+        .reading-display {
+            width: 100%;
+            min-height: 350px;
+            max-height: 550px;
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            font-family: inherit;
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+            background: var(--input-bg);
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+            transition: border-color var(--transition-fast);
+            display: none;
+        }
+
+        .reading-display.active {
+            display: block;
+            border-color: var(--accent-solid);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15),
+                        inset 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .reading-display .word {
+            display: inline;
+            transition: all 0.15s ease-in-out;
+            border-radius: 4px;
+            padding: 2px 0;
+        }
+
+        .reading-display .word.highlight {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            color: var(--accent-solid);
+            font-weight: 600;
+            padding: 2px 4px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: scale(1.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .reading-display .word.highlight {
+                background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%);
+                color: #9fa8ed;
+            }
         }
 
         /* ============================================
@@ -666,6 +730,9 @@
                     ></textarea>
                     <span id="charCount" class="char-count">Characters: 0</span>
                 </div>
+
+                <!-- Reading Display with Highlighting -->
+                <div id="readingDisplay" class="reading-display" role="region" aria-label="Reading display with highlighted text"></div>
 
                 <!-- Voice and Rate Controls -->
                 <div class="controls">
@@ -744,7 +811,10 @@
             isPaused: false,
             currentUtterance: null,
             selectedVoice: null,
-            availableVoices: []
+            availableVoices: [],
+            currentWordIndex: -1,
+            words: [],
+            textContent: ''
         };
 
         /* ============================================
@@ -762,7 +832,8 @@
             clearBtn: document.getElementById('clearBtn'),
             sampleBtn: document.getElementById('sampleBtn'),
             statusArea: document.getElementById('statusArea'),
-            warningBanner: document.getElementById('warningBanner')
+            warningBanner: document.getElementById('warningBanner'),
+            readingDisplay: document.getElementById('readingDisplay')
         };
 
         /* ============================================
@@ -828,6 +899,145 @@
         }
 
         /* ============================================
+           READING HIGHLIGHT FUNCTIONS
+           ============================================ */
+        function prepareReadingDisplay(text) {
+            // Store the original text
+            state.textContent = text;
+
+            // Split text into words while preserving whitespace
+            const parts = text.split(/(\s+)/);
+            state.words = [];
+
+            // Build the reading display with word spans
+            let html = '';
+            let wordIndex = 0;
+
+            parts.forEach(part => {
+                if (part.trim().length > 0) {
+                    // It's a word
+                    html += `<span class="word" data-word-index="${wordIndex}">${escapeHtml(part)}</span>`;
+                    state.words.push({
+                        text: part,
+                        index: wordIndex,
+                        element: null // Will be set after DOM insertion
+                    });
+                    wordIndex++;
+                } else {
+                    // It's whitespace
+                    html += escapeHtml(part);
+                }
+            });
+
+            // Set the HTML and get references to word elements
+            elements.readingDisplay.innerHTML = html;
+
+            // Store references to word elements
+            state.words.forEach(word => {
+                word.element = elements.readingDisplay.querySelector(`[data-word-index="${word.index}"]`);
+            });
+
+            // Show the reading display and hide textarea
+            elements.readingDisplay.classList.add('active');
+            elements.textInput.style.display = 'none';
+
+            // Reset current word index
+            state.currentWordIndex = -1;
+        }
+
+        function highlightWord(charIndex) {
+            // Find which word contains this character index
+            let currentPos = 0;
+            let targetWordIndex = -1;
+
+            for (let i = 0; i < state.words.length; i++) {
+                const word = state.words[i];
+                const wordLength = word.text.length;
+
+                if (charIndex >= currentPos && charIndex < currentPos + wordLength) {
+                    targetWordIndex = i;
+                    break;
+                }
+
+                // Account for the word and the space after it in the original text
+                currentPos += wordLength;
+                // Add space/whitespace length
+                const nextSpaceMatch = state.textContent.substring(currentPos).match(/^\s+/);
+                if (nextSpaceMatch) {
+                    currentPos += nextSpaceMatch[0].length;
+                }
+            }
+
+            // If we found a valid word and it's different from the current one
+            if (targetWordIndex !== -1 && targetWordIndex !== state.currentWordIndex) {
+                // Remove highlight from previous word
+                if (state.currentWordIndex !== -1 && state.words[state.currentWordIndex]) {
+                    state.words[state.currentWordIndex].element?.classList.remove('highlight');
+                }
+
+                // Highlight new word
+                if (state.words[targetWordIndex]) {
+                    const wordElement = state.words[targetWordIndex].element;
+                    wordElement?.classList.add('highlight');
+
+                    // Scroll to keep the word visible
+                    scrollToWord(wordElement);
+
+                    state.currentWordIndex = targetWordIndex;
+                }
+            }
+        }
+
+        function scrollToWord(wordElement) {
+            if (!wordElement) return;
+
+            const container = elements.readingDisplay;
+            const containerRect = container.getBoundingClientRect();
+            const wordRect = wordElement.getBoundingClientRect();
+
+            // Check if word is outside visible area
+            const isAbove = wordRect.top < containerRect.top;
+            const isBelow = wordRect.bottom > containerRect.bottom;
+
+            if (isAbove || isBelow) {
+                // Calculate the scroll position to center the word
+                const wordTop = wordElement.offsetTop;
+                const containerHeight = container.clientHeight;
+                const wordHeight = wordElement.offsetHeight;
+
+                const scrollTo = wordTop - (containerHeight / 2) + (wordHeight / 2);
+
+                container.scrollTo({
+                    top: scrollTo,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function clearReadingDisplay() {
+            // Remove highlight from current word
+            if (state.currentWordIndex !== -1 && state.words[state.currentWordIndex]) {
+                state.words[state.currentWordIndex].element?.classList.remove('highlight');
+            }
+
+            // Hide reading display and show textarea
+            elements.readingDisplay.classList.remove('active');
+            elements.textInput.style.display = 'block';
+
+            // Clear state
+            state.currentWordIndex = -1;
+            state.words = [];
+            state.textContent = '';
+            elements.readingDisplay.innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /* ============================================
            TEXT-TO-SPEECH CORE FUNCTIONS
            ============================================ */
         function speak(text) {
@@ -839,6 +1049,9 @@
 
             // Cancel any ongoing speech
             speechSynthesis.cancel();
+
+            // Prepare the reading display with word highlighting
+            prepareReadingDisplay(text);
 
             // Create new utterance
             const utterance = new SpeechSynthesisUtterance(text);
@@ -864,6 +1077,7 @@
                 state.isPlaying = false;
                 state.isPaused = false;
                 state.currentUtterance = null;
+                clearReadingDisplay();
                 updateStatus('Finished.', 'ready');
                 updateButtonStates();
             };
@@ -881,6 +1095,7 @@
                     errorMessage = 'Speech was interrupted.';
                 }
 
+                clearReadingDisplay();
                 updateStatus(errorMessage, 'error');
                 updateButtonStates();
             };
@@ -895,6 +1110,14 @@
                 state.isPaused = false;
                 updateStatus('Speaking...', 'speaking');
                 updateButtonStates();
+            };
+
+            // Track word boundaries for highlighting
+            utterance.onboundary = (event) => {
+                // event.charIndex gives us the character position in the text
+                if (event.name === 'word') {
+                    highlightWord(event.charIndex);
+                }
             };
 
             // Start speaking
@@ -926,6 +1149,7 @@
             state.isPlaying = false;
             state.isPaused = false;
             state.currentUtterance = null;
+            clearReadingDisplay();
             updateStatus('Stopped.', 'ready');
             updateButtonStates();
         }
